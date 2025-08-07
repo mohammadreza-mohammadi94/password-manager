@@ -1,0 +1,34 @@
+pub mod app;
+pub mod components;
+pub mod handlers;
+
+use crate::ui::app::App;
+use crossterm::event;
+use tui::{backend::Backend, Terminal};
+
+pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
+    loop {
+        terminal.draw(|f| {
+            match app.current_view {
+                app::View::LockScreen => components::draw_lock_screen(f, app),
+                app::View::Main => components::draw_main_screen(f, app),
+                app::View::AddCredential => components::draw_add_credential_screen(f, app),
+                app::View::ViewCredential => components::draw_view_credential_screen(f, app),
+            }
+        })?;
+
+        if let event::Event::Key(key) = event::read()? {
+            match app.current_view {
+                app::View::LockScreen => handlers::handle_lock_screen_input(app, key)?,
+                app::View::Main => handlers::handle_main_screen_input(app, key)?,
+                app::View::AddCredential => handlers::handle_add_credential_input(app, key)?,
+                app::View::ViewCredential => handlers::handle_view_credential_input(app, key)?,
+            }
+        }
+
+        if app.current_view == app::View::LockScreen && app.master_password.is_empty() {
+            break;
+        }
+    }
+    Ok(())
+}
