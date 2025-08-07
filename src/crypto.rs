@@ -1,4 +1,4 @@
-use ring::{aead, pbkdf2, rand};
+use ring::{aead, pbkdf2, rand::{self, SecureRandom}};
 use std::num::NonZeroU32;
 
 pub struct CryptoService;
@@ -17,7 +17,7 @@ impl CryptoService {
     }
 
     pub fn encrypt(
-         &[u8],
+        data: &[u8],
         key: &[u8],
     ) -> Result<(Vec<u8>, Vec<u8>), Box<dyn std::error::Error>> {
         let unbound_key = aead::UnboundKey::new(&aead::AES_256_GCM, key)
