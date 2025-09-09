@@ -113,24 +113,54 @@ pub fn draw_add_credential_screen<B: Backend>(f: &mut Frame<B>, app: &App) {
         .block(Block::default().borders(Borders::ALL));
     f.render_widget(title, chunks[0]);
 
-    let service = Paragraph::new(format!("Service: {}", app.service_input))
-        .block(Block::default().borders(Borders::ALL));
+    let active_style = Style::default().fg(Color::Yellow);
+    let inactive_style = Style::default().fg(Color::White);
+
+    let service_block = Block::default().borders(Borders::ALL).title("Service");
+    let service = Paragraph::new(app.service_input.as_ref()).block(
+        if app.active_field == Some(crate::ui::app::ActiveField::Service) {
+            service_block.border_style(active_style)
+        } else {
+            service_block.border_style(inactive_style)
+        },
+    );
     f.render_widget(service, chunks[1]);
 
-    let username = Paragraph::new(format!("Username: {}", app.username_input))
-        .block(Block::default().borders(Borders::ALL));
+    let username_block = Block::default().borders(Borders::ALL).title("Username");
+    let username = Paragraph::new(app.username_input.as_ref()).block(
+        if app.active_field == Some(crate::ui::app::ActiveField::Username) {
+            username_block.border_style(active_style)
+        } else {
+            username_block.border_style(inactive_style)
+        },
+    );
     f.render_widget(username, chunks[2]);
 
-    let password = Paragraph::new(format!("Password: {}", app.password_input))
-        .block(Block::default().borders(Borders::ALL));
+    let password_block = Block::default().borders(Borders::ALL).title("Password");
+    let password = Paragraph::new(app.password_input.as_ref()).block(
+        if app.active_field == Some(crate::ui::app::ActiveField::Password) {
+            password_block.border_style(active_style)
+        } else {
+            password_block.border_style(inactive_style)
+        },
+    );
     f.render_widget(password, chunks[3]);
 
-    let notes = Paragraph::new(format!("Notes: {}", app.notes_input))
-        .block(Block::default().borders(Borders::ALL));
+    let notes_block = Block::default().borders(Borders::ALL).title("Notes");
+    let notes = Paragraph::new(app.notes_input.as_ref()).block(
+        if app.active_field == Some(crate::ui::app::ActiveField::Notes) {
+            notes_block.border_style(active_style)
+        } else {
+            notes_block.border_style(inactive_style)
+        },
+    );
     f.render_widget(notes, chunks[4]);
 
-    let help = Paragraph::new("Tab: Next field, Enter: Save, Esc: Cancel")
-        .style(Style::default().fg(Color::Gray));
+    let help_text = match app.input_mode {
+        crate::ui::app::InputMode::Normal => "Tab: Next, i: Insert, Enter: Save, Esc: Cancel",
+        crate::ui::app::InputMode::Editing => "Esc: Stop editing",
+    };
+    let help = Paragraph::new(help_text).style(Style::default().fg(Color::Gray));
     f.render_widget(help, chunks[5]);
 }
 
@@ -166,7 +196,12 @@ pub fn draw_view_credential_screen<B: Backend>(f: &mut Frame<B>, app: &App) {
                 .block(Block::default().borders(Borders::ALL));
             f.render_widget(username, chunks[2]);
 
-            let password = Paragraph::new("Password: ********")
+            let password_display = if app.show_password {
+                String::from_utf8_lossy(&cred.password).to_string()
+            } else {
+                "********".to_string()
+            };
+            let password = Paragraph::new(format!("Password: {}", password_display))
                 .block(Block::default().borders(Borders::ALL));
             f.render_widget(password, chunks[3]);
 
@@ -174,7 +209,7 @@ pub fn draw_view_credential_screen<B: Backend>(f: &mut Frame<B>, app: &App) {
                 .block(Block::default().borders(Borders::ALL));
             f.render_widget(notes, chunks[4]);
 
-            let help = Paragraph::new("Press any key to return")
+            let help = Paragraph::new("s: show/hide password, q/Esc: return")
                 .style(Style::default().fg(Color::Gray));
             f.render_widget(help, chunks[5]);
         }

@@ -86,6 +86,9 @@ impl PasswordManager {
         Ok(self.credentials.lock().unwrap().values().cloned().collect())
     }
 
+    // This function is currently unused but is kept for potential future features
+    // like searching or viewing a single credential without loading all of them.
+    #[allow(dead_code)]
     pub fn get_credential(&self, id: &str) -> Result<Option<Credential>, Box<dyn std::error::Error>> {
         if self.master_key.is_none() {
             return Err("Vault is locked".into());

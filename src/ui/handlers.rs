@@ -68,33 +68,82 @@ pub fn handle_main_screen_input(app: &mut App, key: KeyEvent) -> Result<(), Box<
     Ok(())
 }
 
+use crate::ui::app::{ActiveField, InputMode};
+
 pub fn handle_add_credential_input(app: &mut App, key: KeyEvent) -> Result<(), Box<dyn std::error::Error>> {
-    match key.code {
-        KeyCode::Enter => {
-            app.add_credential()?;
-        }
-        KeyCode::Esc => {
-            app.clear_form();
-            app.current_view = View::Main;
-        }
-        KeyCode::Tab => {
-            // In a real implementation, we would cycle through fields
-        }
-        KeyCode::Backspace => {
-            // Handle backspace for active field
-            // Simplified for brevity
-        }
-        KeyCode::Char(c) => {
-            // Handle character input for active field
-            // Simplified for brevity
-            app.service_input.push(c);
-        }
-        _ => {}
+    match app.input_mode {
+        InputMode::Normal => match key.code {
+            KeyCode::Char('i') => {
+                app.input_mode = InputMode::Editing;
+            }
+            KeyCode::Char('q') | KeyCode::Esc => {
+                app.clear_form();
+                app.current_view = View::Main;
+            }
+            KeyCode::Tab => {
+                app.next_field();
+            }
+            KeyCode::Enter => {
+                app.add_credential()?;
+            }
+            _ => {}
+        },
+        InputMode::Editing => match key.code {
+            KeyCode::Esc => {
+                app.input_mode = InputMode::Normal;
+            }
+            KeyCode::Backspace => {
+                if let Some(active_field) = app.active_field {
+                    match active_field {
+                        ActiveField::Service => {
+                            app.service_input.pop();
+                        }
+                        ActiveField::Username => {
+                            app.username_input.pop();
+                        }
+                        ActiveField::Password => {
+                            app.password_input.pop();
+                        }
+                        ActiveField::Notes => {
+                            app.notes_input.pop();
+                        }
+                    }
+                }
+            }
+            KeyCode::Char(c) => {
+                if let Some(active_field) = app.active_field {
+                    match active_field {
+                        ActiveField::Service => {
+                            app.service_input.push(c);
+                        }
+                        ActiveField::Username => {
+                            app.username_input.push(c);
+                        }
+                        ActiveField::Password => {
+                            app.password_input.push(c);
+                        }
+                        ActiveField::Notes => {
+                            app.notes_input.push(c);
+                        }
+                    }
+                }
+            }
+            _ => {}
+        },
     }
     Ok(())
 }
 
-pub fn handle_view_credential_input(app: &mut App, _key: KeyEvent) -> Result<(), Box<dyn std::error::Error>> {
-    app.current_view = View::Main;
+pub fn handle_view_credential_input(app: &mut App, key: KeyEvent) -> Result<(), Box<dyn std::error::Error>> {
+    match key.code {
+        KeyCode::Char('q') | KeyCode::Esc => {
+            app.current_view = View::Main;
+            app.show_password = false; // Reset when leaving view
+        }
+        KeyCode::Char('s') => {
+            app.show_password = !app.show_password;
+        }
+        _ => {}
+    }
     Ok(())
 }
