@@ -26,7 +26,7 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> Result<
             }
         }
 
-        if app.current_view == app::View::LockScreen && app.master_password.is_empty() {
+        if app.should_quit {
             break;
         }
     }

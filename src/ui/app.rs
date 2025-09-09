@@ -2,6 +2,7 @@ use crate::manager::PasswordManager;
 use crate::models::Credential;
 
 #[derive(Debug, PartialEq, Clone)]
+#[allow(dead_code)]
 pub enum InputMode {
     Normal,
     Editing,
@@ -25,10 +26,12 @@ pub enum ActiveField {
 
 pub struct App {
     pub password_manager: PasswordManager,
+    #[allow(dead_code)]
     pub input_mode: InputMode,
     pub master_password: String,
     pub current_view: View,
     pub credentials: Vec<Credential>,
+    pub should_quit: bool,
     pub selected_credential: Option<usize>,
     pub service_input: String,
     pub username_input: String,
@@ -47,6 +50,7 @@ impl App {
             master_password: String::new(),
             current_view: View::LockScreen,
             credentials: Vec::new(),
+            should_quit: false,
             selected_credential: None,
             service_input: String::new(),
             username_input: String::new(),

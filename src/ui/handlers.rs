@@ -1,4 +1,4 @@
-use crate::ui::app::{App, View};
+use crate::ui::app::{App, View, ActiveField, InputMode};
 use crossterm::event::{KeyCode, KeyEvent};
 
 pub fn handle_lock_screen_input(app: &mut App, key: KeyEvent) -> Result<(), Box<dyn std::error::Error>> {
@@ -13,7 +13,7 @@ pub fn handle_lock_screen_input(app: &mut App, key: KeyEvent) -> Result<(), Box<
             app.master_password.pop();
         }
         KeyCode::Esc => {
-            std::process::exit(0);
+            app.should_quit = true;
         }
         _ => {}
     }
@@ -23,7 +23,7 @@ pub fn handle_lock_screen_input(app: &mut App, key: KeyEvent) -> Result<(), Box<
 pub fn handle_main_screen_input(app: &mut App, key: KeyEvent) -> Result<(), Box<dyn std::error::Error>> {
     match key.code {
         KeyCode::Char('q') => {
-            std::process::exit(0);
+            app.should_quit = true;
         }
         KeyCode::Char('a') => {
             app.current_view = View::AddCredential;
@@ -67,8 +67,6 @@ pub fn handle_main_screen_input(app: &mut App, key: KeyEvent) -> Result<(), Box<
     }
     Ok(())
 }
-
-use crate::ui::app::{ActiveField, InputMode};
 
 pub fn handle_add_credential_input(app: &mut App, key: KeyEvent) -> Result<(), Box<dyn std::error::Error>> {
     match app.input_mode {
