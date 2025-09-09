@@ -15,6 +15,14 @@ pub enum View {
     ViewCredential,
 }
 
+#[derive(Debug, PartialEq, Clone, Copy)]
+pub enum ActiveField {
+    Service,
+    Username,
+    Password,
+    Notes,
+}
+
 pub struct App {
     pub password_manager: PasswordManager,
     pub input_mode: InputMode,
@@ -27,6 +35,8 @@ pub struct App {
     pub password_input: String,
     pub notes_input: String,
     pub error_message: Option<String>,
+    pub show_password: bool,
+    pub active_field: Option<ActiveField>,
 }
 
 impl App {
@@ -43,6 +53,8 @@ impl App {
             password_input: String::new(),
             notes_input: String::new(),
             error_message: None,
+            show_password: false,
+            active_field: Some(ActiveField::Service),
         })
     }
 
@@ -81,5 +93,16 @@ impl App {
         self.username_input.clear();
         self.password_input.clear();
         self.notes_input.clear();
+        self.active_field = Some(ActiveField::Service);
+    }
+
+    pub fn next_field(&mut self) {
+        self.active_field = match self.active_field {
+            Some(ActiveField::Service) => Some(ActiveField::Username),
+            Some(ActiveField::Username) => Some(ActiveField::Password),
+            Some(ActiveField::Password) => Some(ActiveField::Notes),
+            Some(ActiveField::Notes) => Some(ActiveField::Service),
+            None => Some(ActiveField::Service),
+        };
     }
 }
