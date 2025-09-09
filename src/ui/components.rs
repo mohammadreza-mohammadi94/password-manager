@@ -17,6 +17,7 @@ pub fn draw_lock_screen<B: Backend>(f: &mut Frame<B>, app: &App) {
                 Constraint::Length(3),
                 Constraint::Length(3),
                 Constraint::Length(3),
+                Constraint::Length(1),
             ]
             .as_ref(),
         )
@@ -27,13 +28,19 @@ pub fn draw_lock_screen<B: Backend>(f: &mut Frame<B>, app: &App) {
         .alignment(tui::layout::Alignment::Center);
     f.render_widget(title, chunks[0]);
 
-    let password = Paragraph::new(format!("Master Password: {}", app.master_password))
+    let password = Paragraph::new(format!("Master Password: {}", "*".repeat(app.master_password.len())))
         .style(Style::default().fg(Color::Yellow));
     f.render_widget(password, chunks[1]);
 
-    let instructions = Paragraph::new("Enter master password and press Enter to unlock")
+    let instructions = Paragraph::new("Enter master password and press Enter to unlock\nPress Ctrl+R to reset vault")
         .style(Style::default().fg(Color::Gray));
     f.render_widget(instructions, chunks[2]);
+
+    if let Some(error) = &app.error_message {
+        let error_msg = Paragraph::new(error.as_str())
+            .style(Style::default().fg(Color::Red));
+        f.render_widget(error_msg, chunks[3]);
+    }
 }
 
 pub fn draw_main_screen<B: Backend>(f: &mut Frame<B>, app: &App) {

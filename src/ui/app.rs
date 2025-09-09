@@ -66,11 +66,12 @@ impl App {
         if self.password_manager.unlock(&self.master_password)? {
             self.current_view = View::Main;
             self.load_credentials()?;
-            Ok(())
+            self.error_message = None;
         } else {
             self.error_message = Some("Invalid password".to_string());
-            Err("Invalid password".into())
+            self.master_password.clear();
         }
+        Ok(())
     }
 
     pub fn load_credentials(&mut self) -> Result<(), Box<dyn std::error::Error>> {
@@ -98,6 +99,17 @@ impl App {
         self.password_input.clear();
         self.notes_input.clear();
         self.active_field = Some(ActiveField::Service);
+    }
+
+    pub fn reset(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        self.password_manager.reset()?;
+        self.master_password.clear();
+        self.current_view = View::LockScreen;
+        self.credentials.clear();
+        self.selected_credential = None;
+        self.error_message = None;
+        self.clear_form();
+        Ok(())
     }
 
     pub fn next_field(&mut self) {

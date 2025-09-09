@@ -1,21 +1,28 @@
 use crate::ui::app::{App, View, ActiveField, InputMode};
-use crossterm::event::{KeyCode, KeyEvent};
+use crossterm::event::{self, KeyCode, KeyEvent};
 
 pub fn handle_lock_screen_input(app: &mut App, key: KeyEvent) -> Result<(), Box<dyn std::error::Error>> {
-    match key.code {
-        KeyCode::Enter => {
-            app.unlock_vault()?;
+    if key.modifiers.contains(event::KeyModifiers::CONTROL) && key.code == KeyCode::Char('r') {
+        app.reset()?;
+        app.error_message = Some("Password vault has been reset. Create a new master password.".to_string());
+    } else {
+        match key.code {
+            KeyCode::Enter => {
+                app.unlock_vault()?;
+            }
+            KeyCode::Char(c) => {
+                app.master_password.push(c);
+                app.error_message = None; // Clear error when typing
+            }
+            KeyCode::Backspace => {
+                app.master_password.pop();
+                app.error_message = None; // Clear error when typing
+            }
+            KeyCode::Esc => {
+                app.should_quit = true;
+            }
+            _ => {}
         }
-        KeyCode::Char(c) => {
-            app.master_password.push(c);
-        }
-        KeyCode::Backspace => {
-            app.master_password.pop();
-        }
-        KeyCode::Esc => {
-            app.should_quit = true;
-        }
-        _ => {}
     }
     Ok(())
 }
