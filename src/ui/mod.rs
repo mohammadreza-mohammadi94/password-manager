@@ -13,6 +13,7 @@ pub fn run_app<B: Backend>(
     terminal.clear()?;
     
     loop {
+        app.check_inactivity();
         terminal.draw(|f| {
             match app.current_view {
                 app::View::LockScreen => components::draw_lock_screen(f, app),
@@ -24,6 +25,7 @@ pub fn run_app<B: Backend>(
 
         if event::poll(std::time::Duration::from_millis(250))? {
             if let event::Event::Key(key) = event::read()? {
+                app.reset_activity_timer();
                 match app.current_view {
                     app::View::LockScreen => handlers::handle_lock_screen_input(app, key)?,
                     app::View::Main => handlers::handle_main_screen_input(app, key)?,

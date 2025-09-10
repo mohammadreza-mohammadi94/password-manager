@@ -199,4 +199,10 @@ impl PasswordManager {
         self.salt = None;
         Ok(())
     }
+
+    pub fn lock(&mut self) {
+        self.credentials.lock().unwrap().clear();
+        self.master_key = None;
+        self.salt = None;
+    }
 }

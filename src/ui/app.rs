@@ -1,6 +1,7 @@
 use crate::manager::PasswordManager;
 use crate::models::{Credential, EntryType};
 use zxcvbn::zxcvbn;
+use std::time::{Duration, Instant};
 
 #[derive(Debug, PartialEq, Clone)]
 #[allow(dead_code)]
@@ -50,6 +51,8 @@ pub struct App {
     pub active_field: Option<ActiveField>,
     pub is_active_input: bool,
     pub entry_type: EntryType,
+    pub last_activity: Instant,
+    pub inactivity_duration: Duration,
 }
 
 impl App {
@@ -76,6 +79,8 @@ impl App {
             active_field: Some(ActiveField::Service),
             is_active_input: true,
             entry_type: EntryType::Password,
+            last_activity: Instant::now(),
+            inactivity_duration: Duration::from_secs(5 * 60), // 5 minutes
         })
     }
 
@@ -89,6 +94,7 @@ impl App {
                 self.current_view = View::Main;
                 self.load_credentials()?;
                 self.error_message = None;
+                self.reset_activity_timer();
             }
             Ok(false) => {
                 self.error_message = Some("Invalid password".to_string());
@@ -100,6 +106,26 @@ impl App {
             }
         }
         Ok(())
+    }
+
+    pub fn lock_vault(&mut self) {
+        self.password_manager.lock();
+        self.master_password.clear();
+        self.current_view = View::LockScreen;
+        self.credentials.clear();
+        self.selected_credential = None;
+        self.error_message = None;
+        self.clear_form();
+    }
+
+    pub fn check_inactivity(&mut self) {
+        if self.current_view != View::LockScreen && self.last_activity.elapsed() > self.inactivity_duration {
+            self.lock_vault();
+        }
+    }
+
+    pub fn reset_activity_timer(&mut self) {
+        self.last_activity = Instant::now();
     }
 
     pub fn load_credentials(&mut self) -> Result<(), Box<dyn std::error::Error>> {
