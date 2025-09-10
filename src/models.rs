@@ -1,29 +1,74 @@
 use serde::{Deserialize, Serialize};
 use chrono::{DateTime, Utc};
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub enum EntryType {
+    Password,
+    ApiKey,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Credential {
     pub id: String,
+    pub entry_type: EntryType,
     pub service: String,
     pub username: String,
-    pub password: Vec<u8>, // Encrypted
+    pub secret: Vec<u8>, // Encrypted (password or API key)
     pub notes: String,
+    pub is_active: bool, // Used for API keys
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }
 
 impl Credential {
-    pub fn new(service: String, username: String, password: Vec<u8>, notes: String) -> Self {
+    pub fn new_password(service: String, username: String, password: Vec<u8>, notes: String) -> Self {
         let now = Utc::now();
         Self {
             id: uuid::Uuid::new_v4().to_string(),
+            entry_type: EntryType::Password,
             service,
             username,
-            password,
+            secret: password,
             notes,
+            is_active: true,
             created_at: now,
             updated_at: now,
         }
+    }
+
+    pub fn new_api_key(service: String, account_name: String, api_key: Vec<u8>, notes: String, is_active: bool) -> Self {
+        let now = Utc::now();
+        Self {
+            id: uuid::Uuid::new_v4().to_string(),
+            entry_type: EntryType::ApiKey,
+            service,
+            username: account_name,
+            secret: api_key,
+            notes,
+            is_active,
+            created_at: now,
+            updated_at: now,
+        }
+    }
+
+    pub fn update(&mut self, service: Option<String>, username: Option<String>, secret: Option<Vec<u8>>, 
+                 notes: Option<String>, is_active: Option<bool>) {
+        if let Some(s) = service {
+            self.service = s;
+        }
+        if let Some(u) = username {
+            self.username = u;
+        }
+        if let Some(p) = secret {
+            self.secret = p;
+        }
+        if let Some(n) = notes {
+            self.notes = n;
+        }
+        if let Some(a) = is_active {
+            self.is_active = a;
+        }
+        self.updated_at = Utc::now();
     }
 }
 

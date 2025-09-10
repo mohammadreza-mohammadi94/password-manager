@@ -83,7 +83,7 @@ impl PasswordManager {
         }
     }
 
-    pub fn add_credential(
+    pub fn add_password(
         &self,
         service: String,
         username: String,
@@ -94,12 +94,81 @@ impl PasswordManager {
             return Err("Vault is locked".into());
         }
 
-        let credential = Credential::new(service, username, password.into_bytes(), notes);
+        let credential = Credential::new_password(service, username, password.into_bytes(), notes);
         self.credentials
             .lock()
             .unwrap()
             .insert(credential.id.clone(), credential);
+        self.save()?;
         Ok(())
+    }
+
+    pub fn add_api_key(
+        &self,
+        service: String,
+        account_name: String,
+        api_key: String,
+        notes: String,
+        is_active: bool,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        if self.master_key.is_none() {
+            return Err("Vault is locked".into());
+        }
+
+        let credential = Credential::new_api_key(service, account_name, api_key.into_bytes(), notes, is_active);
+        self.credentials
+            .lock()
+            .unwrap()
+            .insert(credential.id.clone(), credential);
+        self.save()?;
+        Ok(())
+    }
+
+    pub fn remove_credential(&self, id: &str) -> Result<(), Box<dyn std::error::Error>> {
+        if self.master_key.is_none() {
+            return Err("Vault is locked".into());
+        }
+
+        self.credentials.lock().unwrap().remove(id);
+        self.save()?;
+        Ok(())
+    }
+
+    pub fn update_credential(
+        &self,
+        id: &str,
+        service: Option<String>,
+        username: Option<String>,
+        secret: Option<String>,
+        notes: Option<String>,
+        is_active: Option<bool>,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        if self.master_key.is_none() {
+            return Err("Vault is locked".into());
+        }
+
+        // Scope the lock to release it before saving
+        let updated = {
+            let mut credentials = self.credentials.lock().unwrap();
+            if let Some(credential) = credentials.get_mut(id) {
+                credential.update(
+                    service,
+                    username,
+                    secret.map(|s| s.into_bytes()),
+                    notes,
+                    is_active,
+                );
+                true
+            } else {
+                false
+            }
+        };
+
+        if updated {
+            self.save()
+        } else {
+            Err("Credential not found".into())
+        }
     }
 
     pub fn get_credentials(&self) -> Result<Vec<Credential>, Box<dyn std::error::Error>> {
