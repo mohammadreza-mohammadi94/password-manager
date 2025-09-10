@@ -82,13 +82,6 @@ A secure, TUI-based password and API key manager built with Rust. This applicati
 ### Custom Theming
 - `t`: Cycle through available themes.
 
-## 🔮 Future Development
-
-Here are some features planned for future releases:
-
-- **Copy to Clipboard:** Securely copy secrets to the system clipboard.
-- **Search/Filter:** Quickly find credentials by searching.
-- **Password Generator:** A built-in tool to create strong, random passwords.
 
 ## 🤝 Contributing
 
