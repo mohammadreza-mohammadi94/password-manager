@@ -1,6 +1,9 @@
 use crate::ui::app::{App, View, ActiveField, InputMode};
 use crate::models::EntryType;
 use crossterm::event::{self, KeyCode, KeyEvent};
+use clipboard::{ClipboardProvider, ClipboardContext};
+use std::thread;
+use std::time::Duration;
 
 pub fn handle_lock_screen_input(app: &mut App, key: KeyEvent) -> Result<(), Box<dyn std::error::Error>> {
     if key.modifiers.contains(event::KeyModifiers::CONTROL) && key.code == KeyCode::Char('r') {
@@ -9,7 +12,11 @@ pub fn handle_lock_screen_input(app: &mut App, key: KeyEvent) -> Result<(), Box<
     } else {
         match key.code {
             KeyCode::Enter => {
-                app.unlock_vault()?;
+                if !app.master_password.is_empty() {
+                    app.unlock_vault()?;
+                } else {
+                    app.error_message = Some("Password cannot be empty".to_string());
+                }
             }
             KeyCode::Char(c) => {
                 app.master_password.push(c);
@@ -29,52 +36,76 @@ pub fn handle_lock_screen_input(app: &mut App, key: KeyEvent) -> Result<(), Box<
 }
 
 pub fn handle_main_screen_input(app: &mut App, key: KeyEvent) -> Result<(), Box<dyn std::error::Error>> {
-    match key.code {
-        KeyCode::Char('q') => {
-            app.should_quit = true;
-        }
-        KeyCode::Char('a') => {
-            app.current_view = View::AddCredential;
-        }
-        KeyCode::Down => {
-            if !app.credentials.is_empty() {
-                let i = match app.selected_credential {
-                    Some(i) => {
-                        if i >= app.credentials.len() - 1 {
-                            0
-                        } else {
-                            i + 1
-                        }
-                    }
-                    None => 0,
-                };
-                app.selected_credential = Some(i);
+    match app.input_mode {
+        InputMode::Normal => match key.code {
+            KeyCode::Char('q') => {
+                app.should_quit = true;
             }
-        }
-        KeyCode::Up => {
-            if !app.credentials.is_empty() {
-                let i = match app.selected_credential {
-                    Some(i) => {
-                        if i == 0 {
-                            app.credentials.len() - 1
-                        } else {
-                            i - 1
-                        }
-                    }
-                    None => 0,
-                };
-                app.selected_credential = Some(i);
+            KeyCode::Char('a') => {
+                app.current_view = View::AddCredential;
             }
-        }
-        KeyCode::Enter => {
-            if let Some(selected_index) = app.selected_credential {
-                if let Some(credential) = app.credentials.get(selected_index) {
-                    app.selected_id = Some(credential.id.clone());
-                    app.current_view = View::ViewCredential;
+            KeyCode::Char('/') => {
+                app.input_mode = InputMode::Editing;
+            }
+            KeyCode::Down => {
+                if !app.credentials.is_empty() {
+                    let i = match app.selected_credential {
+                        Some(i) => {
+                            if i >= app.credentials.len() - 1 {
+                                0
+                            } else {
+                                i + 1
+                            }
+                        }
+                        None => 0,
+                    };
+                    app.selected_credential = Some(i);
                 }
             }
-        }
-        _ => {}
+            KeyCode::Up => {
+                if !app.credentials.is_empty() {
+                    let i = match app.selected_credential {
+                        Some(i) => {
+                            if i == 0 {
+                                app.credentials.len() - 1
+                            } else {
+                                i - 1
+                            }
+                        }
+                        None => 0,
+                    };
+                    app.selected_credential = Some(i);
+                }
+            }
+            KeyCode::Enter => {
+                if let Some(selected_index) = app.selected_credential {
+                    if let Some(credential) = app.credentials.get(selected_index) {
+                        app.selected_id = Some(credential.id.clone());
+                        app.current_view = View::ViewCredential;
+                    }
+                }
+            }
+            _ => {}
+        },
+        InputMode::Editing => match key.code {
+            KeyCode::Char(c) => {
+                app.search_query.push(c);
+                app.filter_credentials();
+            }
+            KeyCode::Backspace => {
+                app.search_query.pop();
+                app.filter_credentials();
+            }
+            KeyCode::Esc => {
+                app.input_mode = InputMode::Normal;
+                app.search_query.clear();
+                app.filter_credentials();
+            }
+            KeyCode::Enter => {
+                app.input_mode = InputMode::Normal;
+            }
+            _ => {}
+        },
     }
     Ok(())
 }
@@ -136,9 +167,13 @@ pub fn handle_add_credential_input(app: &mut App, key: KeyEvent) -> Result<(), B
                         }
                         ActiveField::Secret => {
                             app.secret_input.pop();
+                            app.update_password_strength();
                         }
                         ActiveField::Notes => {
                             app.notes_input.pop();
+                        }
+                        ActiveField::Tags => {
+                            app.tags_input.pop();
                         }
                         ActiveField::IsActive => {
                             app.is_active_input = !app.is_active_input;
@@ -157,9 +192,13 @@ pub fn handle_add_credential_input(app: &mut App, key: KeyEvent) -> Result<(), B
                         }
                         ActiveField::Secret => {
                             app.secret_input.push(c);
+                            app.update_password_strength();
                         }
                         ActiveField::Notes => {
                             app.notes_input.push(c);
+                        }
+                        ActiveField::Tags => {
+                            app.tags_input.push(c);
                         }
                         ActiveField::IsActive => {
                             // IsActive is toggled with backspace or space
@@ -184,6 +223,22 @@ pub fn handle_view_credential_input(app: &mut App, key: KeyEvent) -> Result<(), 
         }
         KeyCode::Char('s') => {
             app.show_secret = !app.show_secret;
+        }
+        KeyCode::Char('c') => {
+            if let Some(index) = app.selected_credential {
+                if let Some(cred) = app.credentials.get(index) {
+                    let mut ctx: ClipboardContext = ClipboardProvider::new().unwrap();
+                    let secret = String::from_utf8_lossy(&cred.secret).to_string();
+                    ctx.set_contents(secret).unwrap();
+                    app.info_message = Some("Copied to clipboard!".to_string());
+
+                    thread::spawn(|| {
+                        thread::sleep(Duration::from_secs(30));
+                        let mut ctx: ClipboardContext = ClipboardProvider::new().unwrap();
+                        ctx.set_contents("".to_string()).unwrap();
+                    });
+                }
+            }
         }
         KeyCode::Char('e') => {
             // If a credential is selected, load it for editing

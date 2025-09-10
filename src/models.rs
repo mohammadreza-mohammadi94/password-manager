@@ -15,13 +15,14 @@ pub struct Credential {
     pub username: String,
     pub secret: Vec<u8>, // Encrypted (password or API key)
     pub notes: String,
+    pub tags: Vec<String>,
     pub is_active: bool, // Used for API keys
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }
 
 impl Credential {
-    pub fn new_password(service: String, username: String, password: Vec<u8>, notes: String) -> Self {
+    pub fn new_password(service: String, username: String, password: Vec<u8>, notes: String, tags: Vec<String>) -> Self {
         let now = Utc::now();
         Self {
             id: uuid::Uuid::new_v4().to_string(),
@@ -30,13 +31,14 @@ impl Credential {
             username,
             secret: password,
             notes,
+            tags,
             is_active: true,
             created_at: now,
             updated_at: now,
         }
     }
 
-    pub fn new_api_key(service: String, account_name: String, api_key: Vec<u8>, notes: String, is_active: bool) -> Self {
+    pub fn new_api_key(service: String, account_name: String, api_key: Vec<u8>, notes: String, is_active: bool, tags: Vec<String>) -> Self {
         let now = Utc::now();
         Self {
             id: uuid::Uuid::new_v4().to_string(),
@@ -45,6 +47,7 @@ impl Credential {
             username: account_name,
             secret: api_key,
             notes,
+            tags,
             is_active,
             created_at: now,
             updated_at: now,
@@ -52,7 +55,7 @@ impl Credential {
     }
 
     pub fn update(&mut self, service: Option<String>, username: Option<String>, secret: Option<Vec<u8>>, 
-                 notes: Option<String>, is_active: Option<bool>) {
+                 notes: Option<String>, is_active: Option<bool>, tags: Option<Vec<String>>) {
         if let Some(s) = service {
             self.service = s;
         }
@@ -67,6 +70,9 @@ impl Credential {
         }
         if let Some(a) = is_active {
             self.is_active = a;
+        }
+        if let Some(t) = tags {
+            self.tags = t;
         }
         self.updated_at = Utc::now();
     }

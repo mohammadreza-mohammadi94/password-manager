@@ -89,12 +89,13 @@ impl PasswordManager {
         username: String,
         password: String,
         notes: String,
+        tags: Vec<String>,
     ) -> Result<(), Box<dyn std::error::Error>> {
         if self.master_key.is_none() {
             return Err("Vault is locked".into());
         }
 
-        let credential = Credential::new_password(service, username, password.into_bytes(), notes);
+        let credential = Credential::new_password(service, username, password.into_bytes(), notes, tags);
         self.credentials
             .lock()
             .unwrap()
@@ -110,12 +111,13 @@ impl PasswordManager {
         api_key: String,
         notes: String,
         is_active: bool,
+        tags: Vec<String>,
     ) -> Result<(), Box<dyn std::error::Error>> {
         if self.master_key.is_none() {
             return Err("Vault is locked".into());
         }
 
-        let credential = Credential::new_api_key(service, account_name, api_key.into_bytes(), notes, is_active);
+        let credential = Credential::new_api_key(service, account_name, api_key.into_bytes(), notes, is_active, tags);
         self.credentials
             .lock()
             .unwrap()
@@ -142,6 +144,7 @@ impl PasswordManager {
         secret: Option<String>,
         notes: Option<String>,
         is_active: Option<bool>,
+        tags: Option<Vec<String>>,
     ) -> Result<(), Box<dyn std::error::Error>> {
         if self.master_key.is_none() {
             return Err("Vault is locked".into());
@@ -157,6 +160,7 @@ impl PasswordManager {
                     secret.map(|s| s.into_bytes()),
                     notes,
                     is_active,
+                    tags,
                 );
                 true
             } else {
