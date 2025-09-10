@@ -1,6 +1,7 @@
 pub mod app;
 pub mod components;
 pub mod handlers;
+pub mod theme;
 
 use crate::ui::app::App;
 use crossterm::event;

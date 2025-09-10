@@ -29,7 +29,11 @@ pub enum ActiveField {
     IsActive,
 }
 
+use crate::ui::theme::Theme;
+
 pub struct App {
+    pub theme: Theme,
+    pub current_theme: String,
     pub password_manager: PasswordManager,
     #[allow(dead_code)]
     pub input_mode: InputMode,
@@ -60,6 +64,8 @@ pub struct App {
 impl App {
     pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
         Ok(Self {
+            theme: Theme::default(),
+            current_theme: "dark".to_string(),
             password_manager: PasswordManager::new()?,
             input_mode: InputMode::Normal,
             master_password: String::new(),
@@ -85,6 +91,16 @@ impl App {
             last_activity: Instant::now(),
             inactivity_duration: Duration::from_secs(5 * 60), // 5 minutes
         })
+    }
+
+    pub fn next_theme(&mut self) {
+        if self.current_theme == "dark" {
+            self.current_theme = "light".to_string();
+            self.theme = Theme::light();
+        } else {
+            self.current_theme = "dark".to_string();
+            self.theme = Theme::dark();
+        }
     }
 
     pub fn unlock_vault(&mut self) -> Result<(), Box<dyn std::error::Error>> {

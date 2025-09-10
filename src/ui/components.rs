@@ -38,7 +38,7 @@ fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
 
 pub fn draw_lock_screen<B: Backend>(f: &mut Frame<B>, app: &App) {
     let size = f.size();
-    let block = Block::default().style(Style::default().bg(Color::Black));
+    let block = Block::default().style(Style::default().bg(app.theme.background));
     f.render_widget(block, size);
 
     let area = centered_rect(60, 40, size);
@@ -57,28 +57,28 @@ pub fn draw_lock_screen<B: Backend>(f: &mut Frame<B>, app: &App) {
         .split(area);
 
     let title = Paragraph::new(vec![
-        Spans::from(Span::styled("🔒 Privacy-First Password Manager", Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD))),
+        Spans::from(Span::styled("🔒 Privacy-First Password Manager", Style::default().fg(app.theme.primary).add_modifier(Modifier::BOLD))),
     ])
     .alignment(Alignment::Center)
     .block(Block::default().borders(Borders::ALL).border_type(tui::widgets::BorderType::Double));
     f.render_widget(title, area);
 
     let password_input = Paragraph::new(format!("Enter Master Password:\n{}", "*".repeat(app.master_password.len())))
-        .style(Style::default().fg(Color::Yellow))
+        .style(Style::default().fg(app.theme.secondary))
         .alignment(Alignment::Center)
         .wrap(Wrap { trim: true });
     f.render_widget(password_input, chunks[1]);
 
     let instructions = Paragraph::new("Press Enter to unlock, or Ctrl+R to reset.")
-        .style(Style::default().fg(Color::DarkGray))
+        .style(Style::default().fg(app.theme.border))
         .alignment(Alignment::Center);
     f.render_widget(instructions, chunks[3]);
 
     if let Some(error) = &app.error_message {
         let error_area = centered_rect(50, 20, size);
-        let error_block = Block::default().title("Error").borders(Borders::ALL).border_style(Style::default().fg(Color::Red));
+        let error_block = Block::default().title("Error").borders(Borders::ALL).border_style(Style::default().fg(app.theme.error));
         let error_text = Paragraph::new(error.as_str())
-            .style(Style::default().fg(Color::Red))
+            .style(Style::default().fg(app.theme.error))
             .block(error_block)
             .alignment(Alignment::Center)
             .wrap(Wrap { trim: true });
@@ -86,6 +86,7 @@ pub fn draw_lock_screen<B: Backend>(f: &mut Frame<B>, app: &App) {
         f.render_widget(error_text, error_area);
     }
 }
+
 
 pub fn draw_main_screen<B: Backend>(f: &mut Frame<B>, app: &App) {
     let chunks = Layout::default()
@@ -103,13 +104,13 @@ pub fn draw_main_screen<B: Backend>(f: &mut Frame<B>, app: &App) {
         .split(f.size());
 
     let title = Paragraph::new("🔐 Credential Vault")
-        .style(Style::default().fg(Color::Green).add_modifier(Modifier::BOLD))
+        .style(Style::default().fg(app.theme.success).add_modifier(Modifier::BOLD))
         .alignment(Alignment::Center)
         .block(Block::default().borders(Borders::ALL).border_type(tui::widgets::BorderType::Rounded));
     f.render_widget(title, chunks[0]);
 
     let search_bar = Paragraph::new(app.search_query.as_ref())
-        .style(Style::default().fg(Color::Yellow))
+        .style(Style::default().fg(app.theme.secondary))
         .block(Block::default().borders(Borders::ALL).title("Search (/)"));
     f.render_widget(search_bar, chunks[1]);
 
@@ -119,9 +120,9 @@ pub fn draw_main_screen<B: Backend>(f: &mut Frame<B>, app: &App) {
         .enumerate()
         .map(|(i, cred)| {
             let style = if Some(i) == app.selected_credential {
-                Style::default().bg(Color::Blue).fg(Color::White).add_modifier(Modifier::BOLD)
+                Style::default().bg(app.theme.highlight_bg).fg(app.theme.highlight_fg).add_modifier(Modifier::BOLD)
             } else {
-                Style::default().fg(Color::Gray)
+                Style::default().fg(app.theme.border)
             };
             let entry_type_icon = match cred.entry_type {
                 EntryType::Password => "🔑",
@@ -130,11 +131,11 @@ pub fn draw_main_screen<B: Backend>(f: &mut Frame<B>, app: &App) {
             let tags = cred.tags.join(", ");
             let content = Spans::from(vec![
                 Span::styled(format!("{} ", entry_type_icon), Style::default()),
-                Span::styled(format!("{:<20}", cred.service), Style::default().fg(Color::Cyan)),
+                Span::styled(format!("{:<20}", cred.service), Style::default().fg(app.theme.primary)),
                 Span::raw(" - "),
-                Span::styled(format!("{:<20}", cred.username.clone()), Style::default().fg(Color::Yellow)),
+                Span::styled(format!("{:<20}", cred.username.clone()), Style::default().fg(app.theme.secondary)),
                 Span::raw(" - "),
-                Span::styled(tags, Style::default().fg(Color::Magenta)),
+                Span::styled(tags, Style::default().fg(app.theme.accent)),
             ]);
             ListItem::new(content).style(style)
         })
@@ -142,7 +143,7 @@ pub fn draw_main_screen<B: Backend>(f: &mut Frame<B>, app: &App) {
 
     let list = List::new(items)
         .block(Block::default().borders(Borders::ALL).title("Credentials"))
-        .highlight_style(Style::default().bg(Color::Blue).fg(Color::White));
+        .highlight_style(Style::default().bg(app.theme.highlight_bg).fg(app.theme.highlight_fg));
     f.render_widget(list, chunks[2]);
 
     let help_text = if app.credentials.is_empty() {
@@ -152,7 +153,7 @@ pub fn draw_main_screen<B: Backend>(f: &mut Frame<B>, app: &App) {
     };
 
     let help = Paragraph::new(help_text)
-        .style(Style::default().fg(Color::DarkGray))
+        .style(Style::default().fg(app.theme.border))
         .alignment(Alignment::Center)
         .block(Block::default().borders(Borders::ALL).border_type(tui::widgets::BorderType::Rounded));
     f.render_widget(help, chunks[3]);
@@ -197,13 +198,13 @@ pub fn draw_add_credential_screen<B: Backend>(f: &mut Frame<B>, app: &App) {
         }
     };
     let title = Paragraph::new(title_text)
-        .style(Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD))
+        .style(Style::default().fg(app.theme.primary).add_modifier(Modifier::BOLD))
         .alignment(Alignment::Center)
         .block(Block::default().borders(Borders::ALL).border_type(tui::widgets::BorderType::Rounded));
     f.render_widget(title, chunks[0]);
 
-    let active_style = Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD);
-    let _inactive_style = Style::default().fg(Color::White);
+    let active_style = Style::default().fg(app.theme.secondary).add_modifier(Modifier::BOLD);
+    let _inactive_style = Style::default().fg(app.theme.foreground);
 
     // Entry Type Selector
     let type_text = match app.entry_type {
@@ -265,11 +266,11 @@ pub fn draw_add_credential_screen<B: Backend>(f: &mut Frame<B>, app: &App) {
     let strength_block = Block::default().borders(Borders::ALL).title("Password Strength");
     let (strength_text, strength_style) = if let Some(score) = app.password_strength {
         match score {
-            0 => ("Very Weak", Style::default().fg(Color::Red)),
-            1 => ("Weak", Style::default().fg(Color::Red)),
-            2 => ("Moderate", Style::default().fg(Color::Yellow)),
-            3 => ("Strong", Style::default().fg(Color::Green)),
-            4 => ("Very Strong", Style::default().fg(Color::Green)),
+            0 => ("Very Weak", Style::default().fg(app.theme.error)),
+            1 => ("Weak", Style::default().fg(app.theme.error)),
+            2 => ("Moderate", Style::default().fg(app.theme.warning)),
+            3 => ("Strong", Style::default().fg(app.theme.success)),
+            4 => ("Very Strong", Style::default().fg(app.theme.success)),
             _ => ("", Style::default()),
         }
     } else {
@@ -337,7 +338,7 @@ pub fn draw_add_credential_screen<B: Backend>(f: &mut Frame<B>, app: &App) {
     };
     let help_text = format!("{} | Tab: Next Field | Enter: Save | Esc: Cancel", mode_text);
     let help = Paragraph::new(help_text)
-        .style(Style::default().fg(Color::DarkGray))
+        .style(Style::default().fg(app.theme.border))
         .alignment(Alignment::Center)
         .block(Block::default().borders(Borders::ALL).border_type(tui::widgets::BorderType::Rounded));
     f.render_widget(help, chunks[help_chunk_index]);
@@ -381,14 +382,14 @@ pub fn draw_view_credential_screen<B: Backend>(f: &mut Frame<B>, app: &App) {
                 EntryType::ApiKey => "👁️ View API Key",
             };
             let title = Paragraph::new(title_text)
-                .style(Style::default().fg(Color::Magenta).add_modifier(Modifier::BOLD))
+                .style(Style::default().fg(app.theme.accent).add_modifier(Modifier::BOLD))
                 .alignment(Alignment::Center)
                 .block(Block::default().borders(Borders::ALL).border_type(tui::widgets::BorderType::Rounded));
             f.render_widget(title, chunks[0]);
 
             let service = Paragraph::new(Spans::from(vec![
-                Span::styled("Service: ", Style::default().fg(Color::Gray)),
-                Span::styled(&cred.service, Style::default().fg(Color::White)),
+                Span::styled("Service: ", Style::default().fg(app.theme.border)),
+                Span::styled(&cred.service, Style::default().fg(app.theme.foreground)),
             ]))
             .block(Block::default().borders(Borders::ALL));
             f.render_widget(service, chunks[1]);
@@ -398,8 +399,8 @@ pub fn draw_view_credential_screen<B: Backend>(f: &mut Frame<B>, app: &App) {
                 EntryType::ApiKey => "Account Name",
             };
             let username = Paragraph::new(Spans::from(vec![
-                Span::styled(format!("{}: ", username_label), Style::default().fg(Color::Gray)),
-                Span::styled(&cred.username, Style::default().fg(Color::White)),
+                Span::styled(format!("{}: ", username_label), Style::default().fg(app.theme.border)),
+                Span::styled(&cred.username, Style::default().fg(app.theme.foreground)),
             ]))
             .block(Block::default().borders(Borders::ALL));
             f.render_widget(username, chunks[2]);
@@ -414,23 +415,23 @@ pub fn draw_view_credential_screen<B: Backend>(f: &mut Frame<B>, app: &App) {
                 "•".repeat(cred.secret.len())
             };
             let secret = Paragraph::new(Spans::from(vec![
-                Span::styled(format!("{}: ", secret_label), Style::default().fg(Color::Gray)),
-                Span::styled(secret_display, Style::default().fg(Color::White)),
+                Span::styled(format!("{}: ", secret_label), Style::default().fg(app.theme.border)),
+                Span::styled(secret_display, Style::default().fg(app.theme.foreground)),
             ]))
             .block(Block::default().borders(Borders::ALL));
             f.render_widget(secret, chunks[3]);
 
             let notes = Paragraph::new(Spans::from(vec![
-                Span::styled("Notes: ", Style::default().fg(Color::Gray)),
-                Span::styled(&cred.notes, Style::default().fg(Color::White)),
+                Span::styled("Notes: ", Style::default().fg(app.theme.border)),
+                Span::styled(&cred.notes, Style::default().fg(app.theme.foreground)),
             ]))
             .wrap(Wrap { trim: true })
             .block(Block::default().borders(Borders::ALL));
             f.render_widget(notes, chunks[4]);
 
             let tags = Paragraph::new(Spans::from(vec![
-                Span::styled("Tags: ", Style::default().fg(Color::Gray)),
-                Span::styled(cred.tags.join(", "), Style::default().fg(Color::White)),
+                Span::styled("Tags: ", Style::default().fg(app.theme.border)),
+                Span::styled(cred.tags.join(", "), Style::default().fg(app.theme.foreground)),
             ]))
             .wrap(Wrap { trim: true })
             .block(Block::default().borders(Borders::ALL));
@@ -438,8 +439,8 @@ pub fn draw_view_credential_screen<B: Backend>(f: &mut Frame<B>, app: &App) {
 
             let custom_fields_display = cred.custom_fields.iter().map(|(k, v)| format!("{}: {}", k, v)).collect::<Vec<String>>().join("\n");
             let custom_fields = Paragraph::new(Spans::from(vec![
-                Span::styled("Custom Fields: ", Style::default().fg(Color::Gray)),
-                Span::styled(custom_fields_display, Style::default().fg(Color::White)),
+                Span::styled("Custom Fields: ", Style::default().fg(app.theme.border)),
+                Span::styled(custom_fields_display, Style::default().fg(app.theme.foreground)),
             ]))
             .wrap(Wrap { trim: true })
             .block(Block::default().borders(Borders::ALL));
@@ -449,8 +450,8 @@ pub fn draw_view_credential_screen<B: Backend>(f: &mut Frame<B>, app: &App) {
                 EntryType::ApiKey => {
                     let active_text = if cred.is_active { "✅ Active" } else { "❌ Inactive" };
                     let is_active = Paragraph::new(Spans::from(vec![
-                        Span::styled("Status: ", Style::default().fg(Color::Gray)),
-                        Span::styled(active_text, Style::default().fg(Color::White)),
+                        Span::styled("Status: ", Style::default().fg(app.theme.border)),
+                        Span::styled(active_text, Style::default().fg(app.theme.foreground)),
                     ]))
                     .block(Block::default().borders(Borders::ALL));
                     f.render_widget(is_active, chunks[7]);
@@ -460,16 +461,16 @@ pub fn draw_view_credential_screen<B: Backend>(f: &mut Frame<B>, app: &App) {
             };
             
             let help = Paragraph::new("c: Copy | s: Show/Hide Secret | e: Edit | d: Delete | q/Esc: Back")
-                .style(Style::default().fg(Color::DarkGray))
+                .style(Style::default().fg(app.theme.border))
                 .alignment(Alignment::Center)
                 .block(Block::default().borders(Borders::ALL).border_type(tui::widgets::BorderType::Rounded));
             f.render_widget(help, chunks[help_chunk_index]);
 
             if let Some(info) = &app.info_message {
                 let info_area = centered_rect(50, 20, f.size());
-                let info_block = Block::default().title("Info").borders(Borders::ALL).border_style(Style::default().fg(Color::Green));
+                let info_block = Block::default().title("Info").borders(Borders::ALL).border_style(Style::default().fg(app.theme.success));
                 let info_text = Paragraph::new(info.as_str())
-                    .style(Style::default().fg(Color::Green))
+                    .style(Style::default().fg(app.theme.success))
                     .block(info_block)
                     .alignment(Alignment::Center)
                     .wrap(Wrap { trim: true });
@@ -479,3 +480,4 @@ pub fn draw_view_credential_screen<B: Backend>(f: &mut Frame<B>, app: &App) {
         }
     }
 }
+

@@ -9,6 +9,8 @@ pub fn handle_lock_screen_input(app: &mut App, key: KeyEvent) -> Result<(), Box<
     if key.modifiers.contains(event::KeyModifiers::CONTROL) && key.code == KeyCode::Char('r') {
         app.reset()?;
         app.error_message = Some("Password vault has been reset. Create a new master password.".to_string());
+    } else if key.modifiers.contains(event::KeyModifiers::CONTROL) && key.code == KeyCode::Char('t') {
+        app.next_theme();
     } else {
         match key.code {
             KeyCode::Enter => {
@@ -36,6 +38,10 @@ pub fn handle_lock_screen_input(app: &mut App, key: KeyEvent) -> Result<(), Box<
 }
 
 pub fn handle_main_screen_input(app: &mut App, key: KeyEvent) -> Result<(), Box<dyn std::error::Error>> {
+    if key.modifiers.contains(event::KeyModifiers::CONTROL) && key.code == KeyCode::Char('t') {
+        app.next_theme();
+        return Ok(());
+    }
     match app.input_mode {
         InputMode::Normal => match key.code {
             KeyCode::Char('q') => {
@@ -117,6 +123,10 @@ pub fn handle_main_screen_input(app: &mut App, key: KeyEvent) -> Result<(), Box<
 }
 
 pub fn handle_add_credential_input(app: &mut App, key: KeyEvent) -> Result<(), Box<dyn std::error::Error>> {
+    if key.modifiers.contains(event::KeyModifiers::CONTROL) && key.code == KeyCode::Char('t') {
+        app.next_theme();
+        return Ok(());
+    }
     match app.input_mode {
         InputMode::Normal => match key.code {
             KeyCode::Char('i') => {
@@ -228,6 +238,10 @@ pub fn handle_add_credential_input(app: &mut App, key: KeyEvent) -> Result<(), B
 }
 
 pub fn handle_view_credential_input(app: &mut App, key: KeyEvent) -> Result<(), Box<dyn std::error::Error>> {
+    if key.modifiers.contains(event::KeyModifiers::CONTROL) && key.code == KeyCode::Char('t') {
+        app.next_theme();
+        return Ok(());
+    }
     match key.code {
         KeyCode::Char('q') | KeyCode::Esc => {
             app.current_view = View::Main;
