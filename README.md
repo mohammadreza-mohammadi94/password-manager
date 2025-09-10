@@ -10,6 +10,8 @@ A secure, TUI-based password and API key manager built with Rust. This applicati
 - **Password & API Key Management:** Store both traditional passwords and API keys with dedicated fields.
 - **Modern TUI:** A clean, user-friendly terminal interface built with `tui-rs`.
 - **Cross-Platform:** Built with Rust, it compiles and runs on Windows, macOS, and Linux.
+- **Auto-Lock on Inactivity:** Automatically locks the vault after a configurable period of inactivity (e.g., 5 or 15 minutes).
+- **Import/Export Vault:** Add functionality to export the entire vault to a standard format like CSV or JSON (with a strong warning about it being unencrypted). You could also implement an import feature to migrate from other password managers.
 - **Core Functionality:**
   - Add, Edit, and Delete credentials.
   - View credential details with a show/hide toggle for secrets.
@@ -58,6 +60,8 @@ A secure, TUI-based password and API key manager built with Rust. This applicati
 - `↑`/`↓`: Navigate through the list of credentials.
 - `Enter`: View the details of the selected credential.
 - `a`: Switch to the "Add Credential" screen.
+- `e`: Export the vault to `vault_export.json`.
+- `i`: Import credentials from `vault_export.json`.
 - `q`: Lock the vault and quit the application.
 
 ### View Credential Screen
@@ -81,8 +85,9 @@ Here are some features planned for future releases:
 - **Copy to Clipboard:** Securely copy secrets to the system clipboard.
 - **Search/Filter:** Quickly find credentials by searching.
 - **Password Generator:** A built-in tool to create strong, random passwords.
-- **Auto-Lock:** Automatically lock the vault after a period of inactivity.
-- **Import/Export:** Support for importing and exporting data from/to common formats like CSV.
+- **Copy to Clipboard:** Securely copy secrets to the system clipboard.
+- **Search/Filter:** Quickly find credentials by searching.
+- **Password Generator:** A built-in tool to create strong, random passwords.
 
 ## 🤝 Contributing
 
