@@ -41,6 +41,12 @@ pub fn handle_main_screen_input(app: &mut App, key: KeyEvent) -> Result<(), Box<
             KeyCode::Char('q') => {
                 app.should_quit = true;
             }
+            KeyCode::Char('e') => {
+                app.export_vault()?;
+            }
+            KeyCode::Char('i') => {
+                app.import_vault()?;
+            }
             KeyCode::Char('a') => {
                 app.current_view = View::AddCredential;
             }

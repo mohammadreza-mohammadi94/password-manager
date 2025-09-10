@@ -306,4 +306,35 @@ impl App {
         }
         Ok(())
     }
+
+    pub fn export_vault(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        let path = "vault_export.json";
+        match self.password_manager.export_vault(path) {
+            Ok(_) => {
+                self.info_message = Some(format!("Vault exported successfully to {}", path));
+                self.error_message = None;
+            }
+            Err(e) => {
+                self.error_message = Some(format!("Error exporting vault: {}", e));
+                self.info_message = None;
+            }
+        }
+        Ok(())
+    }
+
+    pub fn import_vault(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        let path = "vault_export.json";
+        match self.password_manager.import_vault(path) {
+            Ok(_) => {
+                self.load_credentials()?;
+                self.info_message = Some(format!("Vault imported successfully from {}", path));
+                self.error_message = None;
+            }
+            Err(e) => {
+                self.error_message = Some(format!("Error importing vault: {}", e));
+                self.info_message = None;
+            }
+        }
+        Ok(())
+    }
 }

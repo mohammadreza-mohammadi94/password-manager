@@ -205,4 +205,28 @@ impl PasswordManager {
         self.master_key = None;
         self.salt = None;
     }
+
+    pub fn export_vault(&self, path: &str) -> Result<(), Box<dyn std::error::Error>> {
+        if self.master_key.is_none() {
+            return Err("Vault is locked".into());
+        }
+        let credentials = self.get_credentials()?;
+        let json = serde_json::to_string_pretty(&credentials)?;
+        std::fs::write(path, json)?;
+        Ok(())
+    }
+
+    pub fn import_vault(&mut self, path: &str) -> Result<(), Box<dyn std::error::Error>> {
+        if self.master_key.is_none() {
+            return Err("Vault is locked".into());
+        }
+        let json = std::fs::read_to_string(path)?;
+        let credentials: Vec<Credential> = serde_json::from_str(&json)?;
+        let mut vault = self.credentials.lock().unwrap();
+        for credential in credentials {
+            vault.insert(credential.id.clone(), credential);
+        }
+        self.save()?;
+        Ok(())
+    }
 }
