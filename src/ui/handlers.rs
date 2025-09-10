@@ -181,6 +181,9 @@ pub fn handle_add_credential_input(app: &mut App, key: KeyEvent) -> Result<(), B
                         ActiveField::Tags => {
                             app.tags_input.pop();
                         }
+                        ActiveField::CustomFields => {
+                            app.custom_fields_input.pop();
+                        }
                         ActiveField::IsActive => {
                             app.is_active_input = !app.is_active_input;
                         }
@@ -205,6 +208,9 @@ pub fn handle_add_credential_input(app: &mut App, key: KeyEvent) -> Result<(), B
                         }
                         ActiveField::Tags => {
                             app.tags_input.push(c);
+                        }
+                        ActiveField::CustomFields => {
+                            app.custom_fields_input.push(c);
                         }
                         ActiveField::IsActive => {
                             // IsActive is toggled with backspace or space

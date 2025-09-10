@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use chrono::{DateTime, Utc};
+use std::collections::HashMap;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum EntryType {
@@ -17,6 +18,7 @@ pub struct Credential {
     pub notes: String,
     pub tags: Vec<String>,
     pub is_active: bool, // Used for API keys
+    pub custom_fields: HashMap<String, String>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }
@@ -33,6 +35,7 @@ impl Credential {
             notes,
             tags,
             is_active: true,
+            custom_fields: HashMap::new(),
             created_at: now,
             updated_at: now,
         }
@@ -49,13 +52,14 @@ impl Credential {
             notes,
             tags,
             is_active,
+            custom_fields: HashMap::new(),
             created_at: now,
             updated_at: now,
         }
     }
 
     pub fn update(&mut self, service: Option<String>, username: Option<String>, secret: Option<Vec<u8>>, 
-                 notes: Option<String>, is_active: Option<bool>, tags: Option<Vec<String>>) {
+                 notes: Option<String>, is_active: Option<bool>, tags: Option<Vec<String>>, custom_fields: Option<HashMap<String, String>>) {
         if let Some(s) = service {
             self.service = s;
         }
@@ -73,6 +77,9 @@ impl Credential {
         }
         if let Some(t) = tags {
             self.tags = t;
+        }
+        if let Some(cf) = custom_fields {
+            self.custom_fields = cf;
         }
         self.updated_at = Utc::now();
     }

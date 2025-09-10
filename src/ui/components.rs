@@ -168,6 +168,7 @@ fn get_constraints(entry_type: &EntryType) -> Vec<Constraint> {
         Constraint::Length(3), // Password Strength
         Constraint::Min(3),    // Notes (flexible height)
         Constraint::Length(3), // Tags
+        Constraint::Length(3), // Custom Fields
     ];
     if *entry_type == EntryType::ApiKey {
         constraints.push(Constraint::Length(3)); // Is Active
@@ -301,6 +302,17 @@ pub fn draw_add_credential_screen<B: Backend>(f: &mut Frame<B>, app: &App) {
     );
     f.render_widget(tags, chunks[7]);
 
+    // Custom Fields
+    let custom_fields_block = Block::default().borders(Borders::ALL).title("Custom Fields (key:value, comma-separated)");
+    let custom_fields = Paragraph::new(app.custom_fields_input.as_ref()).block(
+        if app.active_field == Some(crate::ui::app::ActiveField::CustomFields) {
+            custom_fields_block.border_style(active_style)
+        } else {
+            custom_fields_block
+        },
+    );
+    f.render_widget(custom_fields, chunks[8]);
+
     let help_chunk_index = if app.entry_type == EntryType::ApiKey {
         // Is Active for API Key
         let is_active_block = Block::default().borders(Borders::ALL).title("Active Status");
@@ -312,10 +324,10 @@ pub fn draw_add_credential_screen<B: Backend>(f: &mut Frame<B>, app: &App) {
                 is_active_block
             },
         );
-        f.render_widget(is_active, chunks[8]);
-        9
+        f.render_widget(is_active, chunks[9]);
+        10
     } else {
-        8
+        9
     };
 
     // Help Text
@@ -342,6 +354,7 @@ pub fn draw_view_credential_screen<B: Backend>(f: &mut Frame<B>, app: &App) {
                     Constraint::Length(3), // Password
                     Constraint::Min(3),    // Notes
                     Constraint::Length(3), // Tags
+                    Constraint::Length(3), // Custom Fields
                     Constraint::Length(3), // Help
                 ],
                 EntryType::ApiKey => vec![
@@ -351,6 +364,7 @@ pub fn draw_view_credential_screen<B: Backend>(f: &mut Frame<B>, app: &App) {
                     Constraint::Length(3), // API Key
                     Constraint::Min(3),    // Notes
                     Constraint::Length(3), // Tags
+                    Constraint::Length(3), // Custom Fields
                     Constraint::Length(3), // Is Active
                     Constraint::Length(3), // Help
                 ],
@@ -422,6 +436,15 @@ pub fn draw_view_credential_screen<B: Backend>(f: &mut Frame<B>, app: &App) {
             .block(Block::default().borders(Borders::ALL));
             f.render_widget(tags, chunks[5]);
 
+            let custom_fields_display = cred.custom_fields.iter().map(|(k, v)| format!("{}: {}", k, v)).collect::<Vec<String>>().join("\n");
+            let custom_fields = Paragraph::new(Spans::from(vec![
+                Span::styled("Custom Fields: ", Style::default().fg(Color::Gray)),
+                Span::styled(custom_fields_display, Style::default().fg(Color::White)),
+            ]))
+            .wrap(Wrap { trim: true })
+            .block(Block::default().borders(Borders::ALL));
+            f.render_widget(custom_fields, chunks[6]);
+
             let help_chunk_index = match cred.entry_type {
                 EntryType::ApiKey => {
                     let active_text = if cred.is_active { "✅ Active" } else { "❌ Inactive" };
@@ -430,10 +453,10 @@ pub fn draw_view_credential_screen<B: Backend>(f: &mut Frame<B>, app: &App) {
                         Span::styled(active_text, Style::default().fg(Color::White)),
                     ]))
                     .block(Block::default().borders(Borders::ALL));
-                    f.render_widget(is_active, chunks[6]);
-                    7
+                    f.render_widget(is_active, chunks[7]);
+                    8
                 },
-                EntryType::Password => 6,
+                EntryType::Password => 7,
             };
             
             let help = Paragraph::new("c: Copy | s: Show/Hide Secret | e: Edit | d: Delete | q/Esc: Back")

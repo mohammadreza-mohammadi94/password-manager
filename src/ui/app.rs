@@ -25,6 +25,7 @@ pub enum ActiveField {
     Secret,
     Notes,
     Tags,
+    CustomFields,
     IsActive,
 }
 
@@ -43,6 +44,7 @@ pub struct App {
     pub secret_input: String,
     pub notes_input: String,
     pub tags_input: String,
+    pub custom_fields_input: String,
     pub search_query: String,
     pub password_strength: Option<u8>,
     pub error_message: Option<String>,
@@ -71,6 +73,7 @@ impl App {
             secret_input: String::new(),
             notes_input: String::new(),
             tags_input: String::new(),
+            custom_fields_input: String::new(),
             search_query: String::new(),
             password_strength: None,
             error_message: None,
@@ -211,6 +214,16 @@ impl App {
         let notes = self.notes_input.clone();
         let tags = self.tags_input.split(',').map(|s| s.trim().to_string()).collect();
         let is_active = self.is_active_input;
+        let custom_fields = self.custom_fields_input
+            .split(',')
+            .filter_map(|s| {
+                let mut parts = s.splitn(2, ':');
+                match (parts.next(), parts.next()) {
+                    (Some(key), Some(value)) => Some((key.trim().to_string(), value.trim().to_string())),
+                    _ => None,
+                }
+            })
+            .collect();
 
         // Clear form state immediately
         self.clear_form();
@@ -226,6 +239,7 @@ impl App {
             Some(notes),
             Some(is_active),
             Some(tags),
+            Some(custom_fields),
         )?;
 
         // Reload credentials
@@ -241,6 +255,7 @@ impl App {
         self.secret_input.clear();
         self.notes_input.clear();
         self.tags_input.clear();
+        self.custom_fields_input.clear();
         self.password_strength = None;
         self.is_active_input = true;
         self.active_field = Some(ActiveField::Service);
@@ -267,7 +282,8 @@ impl App {
             Some(ActiveField::Username) => Some(ActiveField::Secret),
             Some(ActiveField::Secret) => Some(ActiveField::Notes),
             Some(ActiveField::Notes) => Some(ActiveField::Tags),
-            Some(ActiveField::Tags) => {
+            Some(ActiveField::Tags) => Some(ActiveField::CustomFields),
+            Some(ActiveField::CustomFields) => {
                 if self.entry_type == EntryType::ApiKey {
                     Some(ActiveField::IsActive)
                 } else {
@@ -296,6 +312,7 @@ impl App {
             self.secret_input = String::from_utf8(credential.secret.clone()).unwrap_or_default();
             self.notes_input = credential.notes.clone();
             self.tags_input = credential.tags.join(", ");
+            self.custom_fields_input = credential.custom_fields.iter().map(|(k, v)| format!("{}:{}", k, v)).collect::<Vec<String>>().join(", ");
             self.is_active_input = credential.is_active;
             self.entry_type = credential.entry_type.clone();
             self.selected_id = Some(credential.id.clone());

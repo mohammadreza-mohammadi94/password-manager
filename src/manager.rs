@@ -145,6 +145,7 @@ impl PasswordManager {
         notes: Option<String>,
         is_active: Option<bool>,
         tags: Option<Vec<String>>,
+        custom_fields: Option<HashMap<String, String>>,
     ) -> Result<(), Box<dyn std::error::Error>> {
         if self.master_key.is_none() {
             return Err("Vault is locked".into());
@@ -161,6 +162,7 @@ impl PasswordManager {
                     notes,
                     is_active,
                     tags,
+                    custom_fields,
                 );
                 true
             } else {
