@@ -2,8 +2,6 @@
 
 A secure, TUI-based password and API key manager built with Rust. This application provides a fast, offline-first, and privacy-focused way to manage your sensitive credentials directly from your terminal.
 
-![Main Screen](https://user-images.githubusercontent.com/your-id/your-repo/assets/main_screen.png)
-_Note: Screenshot to be added._
 
 ## ✨ Features
 
