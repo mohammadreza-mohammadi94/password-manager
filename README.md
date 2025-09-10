@@ -1,116 +1,95 @@
-# Password Manager
+# 🔒 Privacy-First Password Manager
 
-A secure, terminal-based password manager built with Rust. This application provides a user-friendly TUI (Terminal User Interface) for managing passwords and credentials securely.
+A secure, TUI-based password and API key manager built with Rust. This application provides a fast, offline-first, and privacy-focused way to manage your sensitive credentials directly from your terminal.
 
-## Features
+![Main Screen](https://user-images.githubusercontent.com/your-id/your-repo/assets/main_screen.png)
+_Note: Screenshot to be added._
 
-- Secure password storage using strong encryption
-- Terminal-based user interface using TUI
-- Master password protection
-- Add and view credentials
-- Show/hide password functionality
-- Navigation using keyboard shortcuts
-- Persistent storage with encryption
+## ✨ Features
 
-## Prerequisites
+- **Local-First Storage:** All your data is stored locally in an encrypted vault. You own your data.
+- **Strong Encryption:** Utilizes **AES-256-GCM** for authenticated encryption, with a key derived from your master password using **Argon2**.
+- **Password & API Key Management:** Store both traditional passwords and API keys with dedicated fields.
+- **Modern TUI:** A clean, user-friendly terminal interface built with `tui-rs`.
+- **Cross-Platform:** Built with Rust, it compiles and runs on Windows, macOS, and Linux.
+- **Core Functionality:**
+  - Add, Edit, and Delete credentials.
+  - View credential details with a show/hide toggle for secrets.
+  - Reset the entire vault if needed.
 
-- Rust (1.56.0 or later)
-- Cargo (comes with Rust)
+## 🛠️ Built With
 
-## Installation
+- **[Rust](https://www.rust-lang.org/)** - The core programming language.
+- **[TUI-rs](https://github.com/fdehau/tui-rs)** - For building the terminal user interface.
+- **[Crossterm](https://github.com/crossterm-rs/crossterm)** - For terminal manipulation.
+- **[Ring](https://github.com/briansmith/ring)** - For cryptographic operations (AES-256-GCM).
+- **[Argon2](https://github.com/bryant/argon2-rs)** - For secure key derivation.
+- **[Sled](https://github.com/spacejam/sled)** - For embedded database storage.
+- **[Bincode](https://github.com/bincode-org/bincode)** - For binary serialization.
 
-1. Clone the repository:
-```bash
-git clone https://github.com/mohammadreza-mohammadi94/password-manager.git
-cd password-manager
-```
+## 🚀 Getting Started
 
-2. Build the project:
-```bash
-cargo build --release
-```
+### Prerequisites
 
-3. Run the application:
-```bash
-cargo run --release
-```
+- **Rust & Cargo:** Ensure you have the latest version of Rust installed. You can get it from [rustup.rs](https://rustup.rs/).
 
-## Usage
+### Installation & Running
 
-### Key Bindings
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/mohammadreza-mohammadi94/password-manager.git
+    cd password-manager
+    ```
 
-#### Lock Screen
-- `Enter` - Unlock vault with master password
-- `Esc` - Exit application
+2.  **Run the application:**
+    ```bash
+    cargo run
+    ```
+    The first time you run it, you will be prompted to create a new master password. This will be the only key to your vault.
 
-#### Main Screen
-- `q` - Quit application
-- `a` - Add new credential
-- `↑/↓` - Navigate through credentials
-- `Enter` - View selected credential
+## ⌨️ How to Use
 
-#### Add Credential Screen
-- `i` - Enter editing mode
-- `Tab` - Switch between fields
-- `Enter` - Save credential
-- `Esc` - Exit editing mode/Return to main screen
-- `q` - Return to main screen
+### Global
+- `q` or `Ctrl+C`: Quit the application.
 
-#### View Credential Screen
-- `s` - Show/hide password
-- `q/Esc` - Return to main screen
+### Lock Screen
+- **Enter Password:** Type your master password and press `Enter` to unlock the vault.
+- **Reset Vault:** Press `Ctrl+R` to permanently delete the current vault and start fresh. **Use with caution!**
 
-## Security
+### Main Vault Screen
+- `↑`/`↓`: Navigate through the list of credentials.
+- `Enter`: View the details of the selected credential.
+- `a`: Switch to the "Add Credential" screen.
+- `q`: Lock the vault and quit the application.
 
-This password manager implements several security measures:
+### View Credential Screen
+- `s`: Toggle visibility of the secret (password or API key).
+- `e`: Switch to "Edit" mode for the selected credential.
+- `d`: Delete the selected credential.
+- `q` or `Esc`: Return to the main vault screen.
 
-- AES-256 encryption for stored credentials
-- Argon2 key derivation for master password
-- Secure memory handling
-- No plaintext storage of sensitive data
+### Add/Edit Credential Screen
+- `i`: Enter "Insert" mode to type in a field.
+- `Esc`: Exit "Insert" mode.
+- `Tab`: Navigate to the next field.
+- `t`: (Add mode only) Toggle between creating a `Password` or an `API Key`.
+- `Enter`: Save the new or edited credential.
+- `q` or `Esc`: Cancel and return to the main screen.
 
-## Project Structure
+## 🔮 Future Development
 
-```
-src/
-├── crypto.rs      # Encryption/decryption functionality
-├── main.rs        # Application entry point
-├── manager.rs     # Password manager core functionality
-├── models.rs      # Data structures
-├── storage.rs     # File storage handling
-└── ui/           
-    ├── app.rs     # Application state
-    ├── components.rs # UI components
-    ├── handlers.rs  # Input handling
-    └── mod.rs      # UI module entry
-```
+Here are some features planned for future releases:
 
-## Development
+- **Copy to Clipboard:** Securely copy secrets to the system clipboard.
+- **Search/Filter:** Quickly find credentials by searching.
+- **Password Generator:** A built-in tool to create strong, random passwords.
+- **Auto-Lock:** Automatically lock the vault after a period of inactivity.
+- **Import/Export:** Support for importing and exporting data from/to common formats like CSV.
 
-### Building from Source
+## 🤝 Contributing
 
-```bash
-# Debug build
-cargo build
+Contributions, issues, and feature requests are welcome! Feel free to check the [issues page](https://github.com/mohammadreza-mohammadi94/password-manager/issues).
 
-# Release build
-cargo build --release
-```
+## 📄 License
 
-### Running Tests
-
-```bash
-cargo test
-```
-
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
